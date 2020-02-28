@@ -221,7 +221,7 @@ REST_FRAMEWORK = {
     ),
 }
 
-AUTH_USER_MODEL = 'concrete.User'
+AUTH_USER_MODEL = 'concrete_auth.User'
 
 API_REGISTER_EMAIL_FILTER = r'.*'
 
@@ -236,13 +236,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',
+    # 'django.contrib.sites',
     'django_extensions',
     'social_django',
     'django_otp',
     'rest_framework',
     'corsheaders',
     'concrete_datastore.concrete',
+    'concrete_datastore.concrete.apps_auth.ConcreteAuthConfig',
+    'concrete_datastore.concrete.apps_extra.ConcreteExtraConfig',
 ]
 
 LICENSE = 'GNU GENERAL PUBLIC LICENSE Version 3'

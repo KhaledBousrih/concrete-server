@@ -2,6 +2,7 @@
 from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from django_otp.admin import OTPAdminSite
 from django.utils.translation import ugettext_lazy as _
 
@@ -44,6 +45,8 @@ def get_admin_site():
 main_app = apps.get_app_config('concrete')
 
 admin_site = get_admin_site()
+
+admin_site.unregister(Group)
 
 admin_site.site_header = settings.ADMIN_HEADER
 admin_site.site_url = None
@@ -106,7 +109,13 @@ for meta_model in list_of_meta:
 
         return get_list_filter
 
-    model = main_app.models[meta_model.get_model_name().lower()]
+    if meta_model.get_model_name().lower() in ('user', 'group'):
+        app = apps.get_app_config('concrete_auth')
+    elif meta_model.get_model_name().lower() == 'email':
+        app = apps.get_app_config('concrete_extra')
+    else:
+        app = apps.get_app_config('concrete')
+    model = app.models[meta_model.get_model_name().lower()]
 
     attrs.update(
         {
@@ -154,52 +163,6 @@ class SaveModelMixin:
         if change is False:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
-
-
-@admin.register(EmailDevice, site=admin_site)
-class EmailDeviceAdmin(admin.ModelAdmin, SaveModelMixin):
-    """
-    :class:`~django.contrib.admin.ModelAdmin` for
-    :class:`~django_otp.plugins.otp_email.models.EmailDevice`.
-    """
-
-    fieldsets = [
-        ('Identity', {'fields': ('user', 'name', 'email', 'confirmed')}),
-        ('Configuration', {'fields': ('key',)}),
-        ('Dates', {'fields': ('creation_date', 'modification_date')}),
-        ('Permissions', {'fields': ('created_by',)}),
-    ]
-    list_display = [
-        'user',
-        'name',
-        'email',
-        'confirmed',
-        'creation_date',
-        'modification_date',
-    ]
-
-    readonly_fields = [
-        'key',
-        'created_by',
-        'creation_date',
-        'modification_date',
-    ]
-
-
-@admin.register(TemporaryToken, site=admin_site)
-class TemporaryTokenAdmin(admin.ModelAdmin):
-    fields = ('key', 'user', 'expired', 'creation_date', 'modification_date')
-    ordering = ('-modification_date', '-creation_date')
-    list_display = (
-        'key',
-        'user',
-        'expired',
-        'creation_date',
-        'modification_date',
-    )
-    list_filter = ('user', 'expired', 'creation_date', 'modification_date')
-
-    readonly_fields = ('key', 'creation_date', 'modification_date')
 
 
 @admin.register(ConcretePermission, site=admin_site)

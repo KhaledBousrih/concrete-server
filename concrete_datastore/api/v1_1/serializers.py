@@ -26,8 +26,6 @@ from concrete_datastore.concrete.models import LIST_USER_LEVEL
 from concrete_datastore.api.v1.signals import build_absolute_uri
 from concrete_datastore.concrete.meta import get_meta_definition_by_model_name
 
-concrete = apps.get_app_config('concrete')
-
 
 def make_serializer_class(
     meta_model,
@@ -86,7 +84,13 @@ def make_serializer_class(
             fk_read_only_fields += [name]
 
     class Meta:
-        model = concrete.models[meta_model.get_model_name().lower()]
+        if meta_model.get_model_name().lower() in ('user', 'group'):
+            app = apps.get_app_config('concrete_auth')
+        elif meta_model.get_model_name().lower() == 'email':
+            app = apps.get_app_config('concrete_extra')
+        else:
+            app = apps.get_app_config('concrete')
+        model = app.models[meta_model.get_model_name().lower()]
         fields = _fields
 
         read_only_fields = (

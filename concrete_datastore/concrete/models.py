@@ -67,8 +67,13 @@ def compute_pwd_change_token_expiry():
 
 
 class AuthToken(Token):
+    class Meta:
+        app_label = 'concrete_auth'
+        verbose_name = _("Token")
+        verbose_name_plural = _("Tokens")
+
     user = models.ForeignKey(
-        'concrete.User',
+        'concrete_auth.User',
         related_name='auth_tokens',
         on_delete=models.CASCADE,
         verbose_name=_("User"),
@@ -114,7 +119,7 @@ class EmailDevice(Device):
     modification_date = models.DateTimeField(auto_now=True)
     creation_date = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
-        'concrete.User',
+        'concrete_auth.User',
         related_name="owned_%(class)ss",
         null=True,
         on_delete=models.PROTECT,
@@ -230,15 +235,20 @@ class TemporaryToken(models.Model):
 
 
 class ConcreteRole(models.Model):
+    class Meta:
+        app_label = 'concrete_auth'
+        verbose_name = "Role"
+        verbose_name_plural = "Roles"
+
     uid = models.UUIDField(default=uuid.uuid4, primary_key=True)
     name = models.CharField(
         unique=True, blank=False, null=False, max_length=255
     )
     users = models.ManyToManyField(
-        'concrete.User', blank=True, related_name='concrete_roles'
+        'concrete_auth.User', blank=True, related_name='concrete_roles'
     )
     created_by = models.ForeignKey(
-        'concrete.User',
+        'concrete_auth.User',
         related_name="owned_%(class)ss",
         null=True,
         on_delete=models.PROTECT,
@@ -258,6 +268,11 @@ class ConcreteRole(models.Model):
 
 
 class ConcretePermission(models.Model):
+    class Meta:
+        app_label = 'concrete_auth'
+        verbose_name = "Permission"
+        verbose_name_plural = "Permissions"
+
     uid = models.UUIDField(default=uuid.uuid4, primary_key=True)
     model_name = models.CharField(
         unique=True, blank=False, null=False, max_length=255
@@ -276,7 +291,7 @@ class ConcretePermission(models.Model):
         ConcreteRole, blank=True, related_name='delete_permissions'
     )
     created_by = models.ForeignKey(
-        'concrete.User',
+        'concrete_auth.User',
         related_name="owned_%(class)ss",
         null=True,
         on_delete=models.PROTECT,
@@ -292,7 +307,7 @@ class ConcretePermission(models.Model):
 class SecureConnectToken(models.Model):
     value = models.UUIDField(default=uuid.uuid4, primary_key=True)
     user = models.ForeignKey(
-        'concrete.User',
+        'concrete_auth.User',
         on_delete=models.PROTECT,
         related_name='secure_connect_tokens',
     )
@@ -332,7 +347,9 @@ class UserConfirmation(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, primary_key=True)
     confirmed = models.BooleanField(default=False)
     user = models.ForeignKey(
-        'concrete.User', on_delete=models.CASCADE, related_name='confirmations'
+        'concrete_auth.User',
+        on_delete=models.CASCADE,
+        related_name='confirmations',
     )
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
@@ -551,7 +568,7 @@ class PasswordChangeToken(models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
     expiry_date = models.DateTimeField(default=compute_pwd_change_token_expiry)
     user = models.ForeignKey(
-        'concrete.User',
+        'concrete_auth.User',
         related_name="reset_password_tokens",
         on_delete=models.PROTECT,
     )
@@ -628,26 +645,28 @@ def get_common_fields(public_default_value=False):
 def get_user_tracked_fields():
     return {
         'created_by': models.ForeignKey(
-            'concrete.User',
+            'concrete_auth.User',
             related_name="owned_%(class)ss",
             null=True,
             on_delete=models.PROTECT,
         ),
         'can_admin_users': models.ManyToManyField(
-            'concrete.User',
+            'concrete_auth.User',
             related_name="administrable_%(class)ss",
             blank=True,
         ),
         'can_view_users': models.ManyToManyField(
-            'concrete.User', related_name="viewable_%(class)ss", blank=True
+            'concrete_auth.User',
+            related_name="viewable_%(class)ss",
+            blank=True,
         ),
         'can_admin_groups': models.ManyToManyField(
-            'concrete.Group',
+            'concrete_auth.Group',
             related_name="group_administrable_%(class)ss",
             blank=True,
         ),
         'can_view_groups': models.ManyToManyField(
-            'concrete.Group',
+            'concrete_auth.Group',
             related_name="group_viewable_%(class)ss",
             blank=True,
         ),
@@ -859,6 +878,20 @@ def make_django_model(meta_model, divider):
             pass
         else:
             attrs.update(get_divider_fields_foreignkey(divider))
+
+    if meta_model.get_model_name().lower() == 'email':
+
+        class Meta:
+            app_label = 'concrete_extra'
+
+        attrs.update({'Meta': Meta})
+
+    if meta_model.get_model_name().lower() in ('user', 'group'):
+
+        class Meta:
+            app_label = 'concrete_auth'
+
+        attrs.update({'Meta': Meta})
 
     return type(meta_model.get_model_name(), ancestors, attrs)
 

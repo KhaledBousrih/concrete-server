@@ -27,9 +27,6 @@ from concrete_datastore.api.v1.exceptions import (
 from concrete_datastore.api.v1.signals import build_absolute_uri
 
 
-concrete = apps.get_app_config('concrete')
-
-
 def default_session_control_exempt_rule(user):
     return False
 
@@ -335,7 +332,13 @@ def make_serializer_class(
             fk_read_only_fields += [name]
 
     class Meta:
-        model = concrete.models[meta_model.get_model_name().lower()]
+        if meta_model.get_model_name().lower() in ('user', 'group'):
+            app = apps.get_app_config('concrete_auth')
+        elif meta_model.get_model_name().lower() == 'email':
+            app = apps.get_app_config('concrete_extra')
+        else:
+            app = apps.get_app_config('concrete')
+        model = app.models[meta_model.get_model_name().lower()]
         fields = _fields
 
         read_only_fields = (

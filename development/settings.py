@@ -42,7 +42,11 @@ DATABASES = {
     }
 }
 
-MIGRATION_MODULES = {'concrete': 'concrete_datastore.concrete.migrations'}
+MIGRATION_MODULES = {
+    'concrete': 'concrete_datastore.concrete.migrations.concrete',
+    'concrete_auth': 'concrete_datastore.concrete.migrations.auth',
+    'concrete_extra': 'concrete_datastore.concrete.migrations.extra',
+}
 
 # Email
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

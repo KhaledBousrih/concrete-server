@@ -75,7 +75,7 @@ default_meta_models = [
                 "std.type": "rel_single",
                 "ext.f_type": "ForeignKey",
                 "ext.f_args": {
-                    'to': 'concrete.User',
+                    'to': 'concrete_auth.User',
                     'related_name': 'received_emails',
                     'null': False,
                     'blank': False,
@@ -101,7 +101,12 @@ list_of_meta = list(
 meta_registered = {
     k: v
     for k, v in zip(
-        map(lambda m: 'concrete.{}'.format(m._specifier.name), list_of_meta),
+        map(
+            lambda m: f'concrete_auth.{m._specifier.name}'
+            if m._specifier.name.lower() in ('user', 'group')
+            else f'concrete.{m._specifier.name}',
+            list_of_meta,
+        ),
         list_of_meta,
     )
 }

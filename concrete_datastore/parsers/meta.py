@@ -183,7 +183,11 @@ def make_modelisation_cls(modelisation_spec, version, base=Model):
             )
         rel = relation_elements[0]
         rel_model_name = rel['target_model']['name']
-        return (f'concrete.{rel_model_name}', rel.get('onDelete', 'PROTECT'))
+        if rel_model_name.lower() in ('user', 'group'):
+            app_name = 'concrete_auth'
+        else:
+            app_name = 'concrete'
+        return (f'{app_name}.{rel_model_name}', rel.get('onDelete', 'PROTECT'))
 
     def get_meta_models(self):
         meta_models = []

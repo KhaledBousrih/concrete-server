@@ -168,7 +168,11 @@ def remove_instances_user_tracked_fields(instance, removed_dividers_pks=None):
 
     _filter = {'{}__in'.format(DIVIDER_MODEL.lower()): removed_dividers_pks}
     for model in models_names:
-        c_model = apps.get_model('concrete.{}'.format(model))
+        if model.lower() in ('user', 'group'):
+            app_name = 'concrete_auth'
+        else:
+            app_name = 'concrete'
+        c_model = apps.get_model(f'{app_name}.{model}')
         instances = c_model.objects.filter(**_filter)
         can_view_instances = instances.filter(can_view_users__pk=instance.pk)
         can_admin_instances = instances.filter(can_admin_users__pk=instance.pk)
@@ -1898,7 +1902,13 @@ def make_api_viewset_generic_attributes_class(
 
         permission_classes = model_permission_classes
 
-        model_class = main_app.models[meta_model.get_model_name().lower()]
+        if meta_model.get_model_name().lower() in ('user', 'group'):
+            app = apps.get_app_config('concrete_auth')
+        elif meta_model.get_model_name().lower() == 'email':
+            app = apps.get_app_config('concrete_extra')
+        else:
+            app = apps.get_app_config('concrete')
+        model_class = app.models[meta_model.get_model_name().lower()]
         list_display = meta_model.get_property('m_list_display') or []
         ordering_fields = tuple(meta_model.get_property('m_list_display', []))
         search_fields = tuple(meta_model.get_property('m_search_fields', []))

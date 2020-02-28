@@ -55,10 +55,10 @@ def purge_users_with_wrong_usernames(user_model):
 class Config(AppConfig):
     name = 'concrete_datastore.concrete'
     label = 'concrete'
-    verbose_name = _('NS concrete')
+    verbose_name = _('Models')
 
     def ready(self):
-        user_model = apps.get_model('concrete', 'User')
+        user_model = apps.get_model('concrete_auth', 'User')
         try:
             purge_users_with_wrong_usernames(user_model=user_model)
         except Exception:
@@ -70,3 +70,9 @@ class Config(AppConfig):
 
         if signal_processor is None:
             raise ValueError("Missing module 'signal_processor' in automation")
+
+
+class ConcreteExtraConfig(AppConfig):
+    name = 'concrete_datastore.concrete.apps'
+    label = 'concrete_extra'
+    verbose_name = 'Extra'
